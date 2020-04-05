@@ -10,54 +10,46 @@ import SwiftUI
 import CoreData
 
 struct OrderSheet: View {
-    @Environment (\.managedObjectContext) var managedObjectContext
+    @Environment(\.managedObjectContext) var dbContext
     @Environment(\.presentationMode) var presentationMode
-    
-    @State private  var selectedPizzaIndex = 1
-    @State private var numberOfSlices = 1
-    @State private var tableNumber = ""
-    let pizzaTypes=["Pizza Alemana","Pizza Atun","Pizza Vegetaliana","Pizza Burger ","Pizza Mexicana"]
-    
+    @State var selectedPizzaIndex = 0
+    @State var numberOfSlices = 1
+    @State var tableNumber = ""
+    let pizzaType = ["Margherita","Greek","Cuban","California","Hawaian","New York"]
     var body: some View {
         NavigationView{
-           
             Form{
-                Section(header: Text("Pizza Detail")){
-                    Picker("Pizza tipo", selection:$selectedPizzaIndex){
-                        ForEach(0 ..< pizzaTypes.count){
-                            Text(self.pizzaTypes[$0])
+                Section(header: Text("Pizza details")){
+                    Picker("Pizza type",selection: $selectedPizzaIndex){
+                        ForEach(0 ..< pizzaType.count){
+                            Text(self.pizzaType[$0])
                         }
                     }
-                    Stepper("\(numberOfSlices) Slices ", value: $numberOfSlices, in: 1...12)
+                    Stepper("\(numberOfSlices) Slices", value: $numberOfSlices, in: 1...12)
                 }
-                
-                Section (header: Text("Table")){
+                Section(header: Text("Table")){
                     TextField("Table number", text: $tableNumber)
                         .keyboardType(.numberPad)
                 }
                 Button("Add Order"){
-                    //nsert objeto order
-                    
-                    guard self.tableNumber != "" else {return}
-                    
-                    let newOrder = Order(context: self.managedObjectContext)
-                    newOrder.id=UUID()
-                    newOrder.pizzaType = self.pizzaTypes[self.selectedPizzaIndex]
-                    newOrder.orderStatus = .pending
-                    newOrder.tableNumber = self.tableNumber
-                    newOrder.numberOfSlices = Int16 (self.numberOfSlices)
-                    
+                    guard self.tableNumber != "" else { return }
+                    //insert a DB objeto Order
+                    let order = Order(context:self.dbContext)
+                    order.id = UUID()
+                    order.pizzaType = self.pizzaType[self.selectedPizzaIndex]
+                    order.orderStatus = .pending
+                    order.tableNumber = self.tableNumber
+                    order.numberOfSlices = Int16(self.numberOfSlices)
                     do{
-                        try self.managedObjectContext.save()
+                        try self.dbContext.save()
                         self.presentationMode.wrappedValue.dismiss()
-                    }catch{
+                    }
+                    catch{
                         print(error.localizedDescription)
                     }
-                    
                 }
             }.navigationBarTitle("Add Order")
         }
-        
     }
 }
 
